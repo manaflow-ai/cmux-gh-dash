@@ -97,6 +97,14 @@ gh() {
       check_lookup_sha="${source_sha}"
       check_head_sha="${mismatch_sha}"
       ;;
+    source-fallback)
+      run_prs='[]'
+      run_sha="${source_sha}"
+      check_lookup_sha="${source_sha}"
+      check_head_sha="${source_sha}"
+      ;;
+    association-revoked)
+      ;;
     wrong-app)
       check_app_id=999
       ;;
@@ -130,7 +138,9 @@ gh() {
       jq -nc --arg url "https://api.github.com/repos/${GH_REPO}/pulls/123" '{state:"open",pull_request:{url:$url}}'
       ;;
     "${repo_prefix}/issues/comments/900")
-      jq -nc --arg issue_url "https://api.github.com/repos/${GH_REPO}/issues/123" --arg body "${COMMENT_BODY}" --argjson id "${COMMENT_AUTHOR_ID}" --arg login "${COMMENT_AUTHOR_LOGIN}" --arg type "${COMMENT_AUTHOR_TYPE}" --arg created "${COMMENT_CREATED_AT}" '{issue_url:$issue_url,body:$body,user:{id:$id,login:$login,type:$type},created_at:$created,updated_at:$created}'
+      live_association="${COMMENT_AUTHOR_ASSOCIATION}"
+      [[ "${FAKE_MODE:-normal}" == association-revoked ]] && live_association=NONE
+      jq -nc --arg issue_url "https://api.github.com/repos/${GH_REPO}/issues/123" --arg body "${COMMENT_BODY}" --argjson id "${COMMENT_AUTHOR_ID}" --arg login "${COMMENT_AUTHOR_LOGIN}" --arg type "${COMMENT_AUTHOR_TYPE}" --arg association "${live_association}" --arg created "${COMMENT_CREATED_AT}" '{issue_url:$issue_url,body:$body,user:{id:$id,login:$login,type:$type},author_association:$association,created_at:$created,updated_at:$created}'
       ;;
     "${repo_prefix}/pulls/123")
       jq -nc --arg repo "${GH_REPO}" --arg source_sha "${source_sha}" --arg base_sha "${base_sha}" --arg head_repo "contributor/${GH_REPO#*/}" '{number:123,state:"open",user:{id:300,login:"contributor"},base:{ref:"main",sha:$base_sha,repo:{id:100,full_name:$repo}},head:{ref:"feature",sha:$source_sha,repo:{id:200,full_name:$head_repo}}}'
@@ -210,3 +220,18 @@ run_case suffix-path 0 0
 run_case compatibility-only 0 1 "repos/${GH_REPO}/actions/runs/400/rerun-failed-jobs"
 run_case compatibility-stale-generation 1 0
 run_case compatibility-wrong-details 1 0
+
+# A trusted event association can be revoked before the helper's POST. The
+# live comment association must be authoritative at the authorization point.
+set +e
+association_output="$(FAKE_MODE=association-revoked POSTS_FILE="${work}/posts" COMMENT_AUTHOR_ID=301 COMMENT_AUTHOR_LOGIN=reviewer COMMENT_AUTHOR_ASSOCIATION=OWNER bash "${script}" 2>&1)"
+association_status=$?
+set -e
+association_posts="$(wc -l <"${work}/posts" | tr -d ' ')"
+[[ "${association_status}" == 1 && "${association_posts}" == 0 ]] || {
+  printf 'FAIL association-revoked: status %s posts %s\n%s\n' "${association_status}" "${association_posts}" "${association_output}" >&2
+  exit 1
+}
+printf 'PASS association-revoked\n'
+
+run_case source-fallback 0 1 "repos/${GH_REPO}/actions/jobs/500/rerun"

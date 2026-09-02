@@ -20,6 +20,10 @@ refs="$(grep -oE "manaflow-ai/cla-github-action@[0-9a-f]{40}" "${WORKFLOW}" | so
 [[ "$(sed -n '1p' "${WORKFLOW}")" == 'name: "CLA Assistant v3"' ]]
 [[ "$(grep -Ec '^[[:space:]]+branch: "cla-signatures"$' "${WORKFLOW}")" == 3 ]]
 
+# CODEOWNERS names the trusted reviewers, while branch protection controls the
+# number of approvals. Do not claim that the file itself enforces two votes.
+grep -Fxq '# CLA policy files are assigned to both trusted maintainer code owners. Branch protection controls approval count.' "${CODEOWNERS}"
+
 # Parse job permissions and mutation lanes as data, so a formatting change
 # cannot hide a missing write permission or split the per-PR queue.
 ruby - "${WORKFLOW}" "${MUTATION_GROUP}" <<'RUBY'
