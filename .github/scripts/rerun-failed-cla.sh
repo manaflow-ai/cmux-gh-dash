@@ -178,6 +178,7 @@ jq -e \
   --arg author_id "${COMMENT_AUTHOR_ID}" \
   --arg author_login "${COMMENT_AUTHOR_LOGIN}" \
   --arg author_type "${COMMENT_AUTHOR_TYPE}" \
+  --arg author_association "${COMMENT_AUTHOR_ASSOCIATION}" \
   --arg created_at "${COMMENT_CREATED_AT}" \
   '.issue_url == $issue_url and
    .body == $body and
@@ -186,6 +187,7 @@ jq -e \
    (.user.id | tostring) == $author_id and
    .user.login == $author_login and
    .user.type == $author_type and
+   .author_association == $author_association and
    .created_at == $created_at and
    .updated_at == $created_at' <<<"${comment_json}" >/dev/null || fail "The triggering CLA comment was edited, deleted, or moved"
 
@@ -482,8 +484,9 @@ workflow_id="$(jq -r --arg path "${WORKFLOW_PATH}" '[.[] | .workflows[]? | selec
 # PR object, including its source head and live base SHAs. GitHub can return an
 # empty array for pull_request_target runs. Those candidates are accepted only
 # when the run has complete source-repository metadata and its execution SHA is
-# the live PR base SHA. Missing metadata cannot identify which fork produced a
-# branch, so it is always rejected before any check is rerun.
+# the live PR base SHA or the live PR source head. Missing metadata cannot
+# identify which fork produced a branch, so it is always rejected before any
+# check is rerun.
 runs_page="$(gh_api_bounded \
   --method GET \
   --header 'Accept: application/vnd.github+json' \
@@ -567,7 +570,7 @@ if ! candidate_list_json="$(jq -c \
         | if $prs == null then false
           elif ($prs | length > 100) then false
           elif ($prs | length) == 0 then
-            .head_sha == $base_sha and
+            (.head_sha == $base_sha or .head_sha == $sha) and
             .head_branch == $head_ref and
             (.head_repository | type) == "object" and
             .head_repository.full_name == $head_repo and
@@ -776,7 +779,7 @@ if [[ "${candidate_count}" == "0" ]]; then
        | if $prs == null then false
          elif ($prs | length > 100) then false
          elif ($prs | length) == 0 then
-           .head_sha == $sha and
+           (.head_sha == $base_sha or .head_sha == $sha) and
            .head_branch == $head_ref and
            (.head_repository | type) == "object" and
            .head_repository.full_name == $head_repo and
@@ -1030,7 +1033,7 @@ validate_exact_run_payload() {
            else null end) as $prs
         | if $prs == null then false
           elif ($prs | length) == 0 then
-            .head_sha == $base_sha and
+            (.head_sha == $base_sha or .head_sha == $sha) and
             .head_branch == $head_ref and
             (.head_repository | type) == "object" and
             .head_repository.full_name == $head_repo and
