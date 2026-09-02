@@ -55,11 +55,22 @@ fi
 mkdir -p "$root/bin"
 
 download_dir=$(mktemp -d "$root/.gh-dash-download.XXXXXX")
-cleanup() { rm -rf "$download_dir"; }
-trap cleanup EXIT
-trap 'exit 1' HUP INT TERM
 download="$download_dir/$asset_name"
 netrc="$download_dir/netrc"
+cleanup() {
+    # Clear the token before removing the mode-0600 file. A SIGKILL or power
+    # loss cannot run this trap; README.md documents that residual risk.
+    if [ -f "$netrc" ] && [ ! -L "$netrc" ]; then
+        chmod 0600 "$netrc" 2>/dev/null || true
+        : > "$netrc" 2>/dev/null || true
+        unlink "$netrc" 2>/dev/null || true
+    fi
+    if [ -d "$download_dir" ] && [ ! -L "$download_dir" ]; then
+        rm -rf "$download_dir"
+    fi
+}
+trap cleanup EXIT
+trap 'exit 1' HUP INT TERM
 token=$(gh auth token --hostname github.com) || fail "could not read the GitHub CLI token"
 [ -n "$token" ] || fail "the GitHub CLI returned an empty token"
 printf 'machine api.github.com login x-oauth-basic password %s\n' "$token" > "$netrc"

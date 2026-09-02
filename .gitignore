@@ -1,1 +1,5 @@
 /bin/
+# The installer keeps the authenticated download netrc in this short-lived
+# directory. Ignore remnants from an interrupted process so they cannot be
+# added to a commit by accident.
+/.gh-dash-download.*/
