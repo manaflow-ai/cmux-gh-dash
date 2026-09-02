@@ -94,6 +94,10 @@ def main() -> None:
         path = root / "scripts" / "install-gh-dash.sh"
         path.write_text(path.read_text() + "\n# mutable ref: refs/heads/main\n")
 
+    def missing_cleanup_trap(root: Path) -> None:
+        path = root / "scripts" / "install-gh-dash.sh"
+        path.write_text(path.read_text().replace("trap cleanup EXIT", "# cleanup trap removed"))
+
     reject_case("malformed manifest root", malformed_root, "manifest root must be an object")
     reject_case("malformed pane", malformed_pane, "expected exactly one pane")
     reject_case("mutable manifest reference", mutable_manifest_reference, "mutable reference found")
@@ -106,6 +110,11 @@ def main() -> None:
         "mutable branch reference",
         mutable_branch_reference,
         "installer contains a mutable reference",
+    )
+    reject_case(
+        "missing cleanup trap",
+        missing_cleanup_trap,
+        "installer must enforce",
     )
     print("manifest rejection tests: OK")
 

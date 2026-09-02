@@ -132,16 +132,23 @@ def main() -> None:
         fail("installer contains a mutable reference")
     if "releases/assets/$asset_id" not in installer:
         fail("installer must use an immutable release asset ID")
-    if (
-        "actual_sha" not in installer
-        or "--proto '=https'" not in installer
-        or "--proto-redir '=https'" not in installer
-        or "--max-filesize" not in installer
-        or "--netrc-file" not in installer
-        or "gh auth token --hostname github.com" not in installer
-        or "codesign --verify" not in installer
-    ):
-        fail("installer must enforce authenticated HTTPS, a size bound, SHA-256, and code signing")
+    required_installer_fragments = (
+        "actual_sha",
+        "--proto '=https'",
+        "--proto-redir '=https'",
+        "--max-filesize",
+        "--netrc-file",
+        "gh auth token --hostname github.com",
+        "codesign --verify",
+        "trap cleanup EXIT",
+        "trap 'exit 1' HUP INT TERM",
+        'unlink "$netrc"',
+    )
+    if any(fragment not in installer for fragment in required_installer_fragments):
+        fail(
+            "installer must enforce authenticated HTTPS, a size bound, SHA-256, "
+            "code signing, and temporary credential cleanup"
+        )
     parse_lock()
     print("manifest check: OK")
 
