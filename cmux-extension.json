@@ -3,17 +3,22 @@
   "manifestVersion": 1,
   "id": "gh-dash",
   "name": "GitHub Dashboard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "PRs and issues dashboard (gh-dash) as a cmux Dock pane. Requires the GitHub CLI, signed in.",
   "icon": "rectangle.grid.2x2",
   "build": [
-    { "command": ["gh", "extension", "install", "dlvhdr/gh-dash"] }
+    {
+      "command": ["sh", "scripts/install-gh-dash.sh"],
+      "platforms": ["macos"]
+    }
   ],
+  "platforms": ["macos"],
   "panes": [
     {
       "id": "dash",
       "title": "PRs & issues",
-      "command": ["gh", "dash"]
+      "command": ["bin/gh-dash"],
+      "platforms": ["macos"]
     }
   ]
 }

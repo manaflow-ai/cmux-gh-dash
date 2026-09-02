@@ -1,0 +1,10 @@
+# Audited release metadata for https://github.com/dlvhdr/gh-dash.
+# v4.25.2 is an SSH-signed tag at the immutable commit below. The release
+# asset IDs are used instead of the mutable tag download URL. Keep the
+# published SHA-256 values in sync with the GitHub release asset records.
+release v4.25.2
+release_id 352033227
+tag_object 61e619ba8a9682ba8a822282d1da8c5eb7b0bbff
+source_commit a613ef744c99ef8d8ead33467813c6ee6086af52
+asset darwin-arm64 472375589 22930386 gh-dash_v4.25.2_darwin-arm64 a0e787ef5679e45e08c69edb34f25ed811aefc14157dd08f5721edcb5a3ec671
+asset darwin-amd64 472375685 24346336 gh-dash_v4.25.2_darwin-amd64 ced29d14d9cf4a7508ca3a7466f0a6867fe9694fc8c65cd354bc842f7f32c18a
