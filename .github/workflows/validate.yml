@@ -24,3 +24,5 @@ jobs:
           persist-credentials: false
       - name: Validate manifest and release lock
         run: python3 scripts/check-manifest.py
+      - name: Test rejection of mutable references
+        run: python3 scripts/test-check-manifest.py
