@@ -27,7 +27,8 @@ EXPECTED_ASSETS = {
     ),
 }
 MUTABLE = re.compile(
-    r"(?:releases/latest|archive/refs/heads/|\b(?:latest|master|main|HEAD)\b)",
+    r"(?:releases/latest|releases/download/|archive/(?:refs/)?(?:heads|tags)/|"
+    r"refs/(?:heads|tags)/|\b(?:latest|master|main|HEAD)\b)",
     re.IGNORECASE,
 )
 
@@ -92,13 +93,20 @@ def main() -> None:
     except (OSError, json.JSONDecodeError) as error:
         fail(f"cannot parse cmux-extension.json: {error}")
 
+    if not isinstance(manifest, dict):
+        fail("manifest root must be an object")
+
     if manifest.get("platforms") != ["macos"]:
         fail("extension must be restricted to macOS")
     build = manifest.get("build")
     if build != [{"command": ["sh", "scripts/install-gh-dash.sh"], "platforms": ["macos"]}]:
         fail("build must use the pinned installer on macOS")
     panes = manifest.get("panes")
-    if not isinstance(panes, list) or len(panes) != 1:
+    if (
+        not isinstance(panes, list)
+        or len(panes) != 1
+        or not isinstance(panes[0], dict)
+    ):
         fail("expected exactly one pane")
     if panes[0].get("command") != ["bin/gh-dash"]:
         fail("pane must execute the verified local binary")
@@ -120,11 +128,14 @@ def main() -> None:
     installer = (ROOT / "scripts" / "install-gh-dash.sh").read_text()
     if "releases/latest" in installer or "gh extension install" in installer:
         fail("installer contains a mutable or global extension install")
+    if MUTABLE.search(installer):
+        fail("installer contains a mutable reference")
     if "releases/assets/$asset_id" not in installer:
         fail("installer must use an immutable release asset ID")
     if (
         "actual_sha" not in installer
         or "--proto '=https'" not in installer
+        or "--proto-redir '=https'" not in installer
         or "--max-filesize" not in installer
         or "--netrc-file" not in installer
         or "gh auth token --hostname github.com" not in installer

@@ -77,13 +77,17 @@ def main() -> None:
 
     def mutable_manifest_reference(root: Path) -> None:
         path, manifest = load_manifest(root)
-        manifest["panes"][0]["title"] = "https://github.com/dlvhdr/gh-dash/releases/latest"
+        manifest["panes"][0]["title"] = (
+            "https://github.com/dlvhdr/gh-dash/releases/latest"
+        )
         path.write_text(json.dumps(manifest) + "\n")
 
     def mutable_release_reference(root: Path) -> None:
         path = root / "scripts" / "install-gh-dash.sh"
         path.write_text(
-            path.read_text() + "\n# mutable URL: https://github.com/dlvhdr/gh-dash/releases/download/v4.25.2\n"
+            path.read_text()
+            + "\n# mutable URL: "
+            + "https://github.com/dlvhdr/gh-dash/releases/download/v4.25.2\n"
         )
 
     def mutable_branch_reference(root: Path) -> None:
@@ -93,8 +97,16 @@ def main() -> None:
     reject_case("malformed manifest root", malformed_root, "manifest root must be an object")
     reject_case("malformed pane", malformed_pane, "expected exactly one pane")
     reject_case("mutable manifest reference", mutable_manifest_reference, "mutable reference found")
-    reject_case("mutable release reference", mutable_release_reference, "installer contains a mutable reference")
-    reject_case("mutable branch reference", mutable_branch_reference, "installer contains a mutable reference")
+    reject_case(
+        "mutable release reference",
+        mutable_release_reference,
+        "installer contains a mutable reference",
+    )
+    reject_case(
+        "mutable branch reference",
+        mutable_branch_reference,
+        "installer contains a mutable reference",
+    )
     print("manifest rejection tests: OK")
 
 

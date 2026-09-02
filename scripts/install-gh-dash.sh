@@ -67,7 +67,7 @@ unset token
 chmod 0600 "$netrc"
 
 curl --fail --location --silent --show-error \
-    --proto '=https' --tlsv1.2 --connect-timeout 30 --max-time 300 \
+    --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 30 --max-time 300 \
     --max-filesize "$expected_size" \
     --netrc-file "$netrc" --user-agent 'cmux-gh-dash/0.1' \
     --header 'Accept: application/octet-stream' \
