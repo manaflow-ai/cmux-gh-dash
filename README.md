@@ -11,5 +11,15 @@ cmux extension install manaflow-ai/cmux-gh-dash
 ```
 
 Requires the [GitHub CLI](https://cli.github.com) (`gh auth login` first). The
-consent preview shows the one build step (`gh extension install dlvhdr/gh-dash`,
-runs once at install) and the pane command (`gh dash`) before anything runs.
+consent preview shows one macOS build step before anything runs. That step
+downloads the audited `gh-dash` v4.25.2 asset by its immutable GitHub release
+asset ID and checks its SHA-256 digest before placing it in the extension
+checkout. The pane executes that verified local binary, so the install never
+resolves a mutable branch, latest release, or global `gh extension` directory.
+
+`gh-dash` can read GitHub data and perform the actions offered by its upstream
+TUI using the user's existing `gh` authentication. cmux does not grant a new
+token or copy credentials to the extension. Use a least-privilege GitHub token
+and review actions before confirming them. Update `third_party/gh-dash.lock`
+only after auditing the signed upstream tag, release asset IDs, and published
+digests, then run `python3 scripts/check-manifest.py`.

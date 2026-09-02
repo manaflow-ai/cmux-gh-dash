@@ -1,0 +1,6 @@
+# Keep the executable, release lock, manifest, and validation policy under
+# maintainer review. These owners are exempt from the CLA signature check.
+/cmux-extension.json @austinywang @azooz2003-bit
+/scripts/ @austinywang @azooz2003-bit
+/third_party/ @austinywang @azooz2003-bit
+/.github/ @austinywang @azooz2003-bit
